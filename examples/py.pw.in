@@ -1,0 +1,36 @@
+&CONTROL
+  calculation = 'scf'
+/
+
+&SYSTEM
+  ecutwfc = 40.0
+  nat = 5
+  ntyp = 2
+  ibrav = 5
+  celldm(1) = 19.9676414
+  celldm(4) = 0.90984704
+  occupations = 'tetrahedra_opt'
+  smearing = 'gaussian'
+  degauss = 0.001
+/
+
+&ELECTRONS
+  diagonalization = 'rmm-davidson'
+  conv_thr = 1d-12
+  electron_maxstep = 100
+  mixing_beta = 0.3
+/
+
+ATOMIC_SPECIES
+Bi 208.9804 Bi.upf
+Te 127.6 Te.upf
+
+ATOMIC_POSITIONS crystal
+Bi 0.3998303769 0.3998303769 0.399830374
+Bi 0.6001696231 0.6001696231 0.600169621
+Te 0.0 -0.0 0.0
+Te 0.7894964631 0.7894964631 0.789496459
+Te 0.2105035369 0.2105035369 0.210503535
+
+K_POINTS automatic
+4 4 4 0 0 0

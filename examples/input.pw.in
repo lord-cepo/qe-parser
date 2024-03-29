@@ -1,0 +1,22 @@
+&CONTROL
+  calculation = 'scf'
+  prefix = 'ciao'
+/
+
+&SYSTEM
+  ecutwfc = 30
+  ibrav = 5
+  ntyp = 2
+  nat = 5
+/
+
+ATOMIC_SPECIES
+Te 127.6 Te.upf
+Bi 208.9804 Bi.upf
+
+ATOMIC_POSITIONS crystal
+Bi 0.0 0.0 0.0
+Te 0.5 0.5 0.5
+
+KPOINTS automatic
+2 2 2 0 0 0
