@@ -1,4 +1,5 @@
 from typing import Union
+import os
 
 def py2fort(data_value):
     if isinstance(data_value, int):
@@ -34,7 +35,7 @@ class XmlPw:
         'Bi': 208.9804,
         'Te': 127.6,
     }
-    def __init__(self, filename='utils/INPUT_PW.xml'):
+    def __init__(self, filename=os.path.dirname(os.path.abspath(__file__))+'/INPUT_PW.xml'):
         import xml.etree.ElementTree as ET
         
         self.tree = ET.parse(filename)
