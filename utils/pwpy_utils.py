@@ -2,15 +2,15 @@ from typing import Union
 import os
 
 def py2fort(data_value):
-    if isinstance(data_value, int):
-        return str(data_value)
-    if isinstance(data_value, float):
-        return str(data_value).replace('e', 'd')
-    if isinstance(data_value, str):
-        return f"'{data_value}'"
-    if isinstance(data_value, bool):
+    if type(data_value) is bool:
         return '.true.' if data_value else '.false.'
-    if isinstance(data_value, list):
+    if type(data_value) is int:
+        return str(data_value)
+    if type(data_value) is float:
+        return str(data_value).replace('e', 'd')
+    if type(data_value) is str:
+        return f"'{data_value}'"
+    if type(data_value) is list:
         return ' '.join(map(str, data_value))
 
 def fort2py(data_type, data_value):
@@ -24,7 +24,8 @@ def fort2py(data_type, data_value):
         return data_value == '.true.'
     raise ValueError(f'Unknown data type {data_type}')
 
-class XmlPw:
+
+class XmlQe:
     conversions = {
         'INTEGER': int,
         'REAL': Union[float, int],
@@ -35,9 +36,10 @@ class XmlPw:
         'Bi': 208.9804,
         'Te': 127.6,
     }
-    def __init__(self, filename=os.path.dirname(os.path.abspath(__file__))+'/INPUT_PW.xml'):
+    def __init__(self, exe, filename=None):
         import xml.etree.ElementTree as ET
-        
+        if filename is None:
+            filename = os.path.dirname(os.path.abspath(__file__))+'/INPUT_'+exe+'.xml'
         self.tree = ET.parse(filename)
         self.root = self.tree.getroot()
         self.namelists = {n.get('name'):[] for n in self.root.findall('.//namelist')}
