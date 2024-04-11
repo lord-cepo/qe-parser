@@ -2,7 +2,7 @@ import os
 from utils.pwpy_utils import XmlQe, fort2py, py2fort
 import xml.etree.ElementTree as ET
 from re import sub
-last_tags = ['ATOMIC_SPECIES', 'ATOMIC_POSITIONS', 'K_POINTS']
+last_tags = ['ATOMIC_SPECIES', 'ATOMIC_POSITIONS', 'K_POINTS', 'CELL_PARAMETERS']
 
 def pw2py(filename):
     t = XmlQe('PW')
@@ -47,6 +47,11 @@ def pw2py(filename):
                             sp = list(map(float, sp))
                         case _:
                             raise ValueError(f'Unknown type {input_pw[read]["type"]}')
+                case 'CELL_PARAMETERS':
+                    sp = list(map(float,sp))
+                case _:
+                    raise NotImplementedError(f'Tag name {read} not implemented')
+                
             input_pw[read]['rows'].append(sp)
     return input_pw
 
@@ -92,6 +97,12 @@ def py2pw(py_dict, outfile='py.pw.in'):
         lines.append(' '.join(map(str, row)) + '\n')
     lines.append('\n')
 
+    if len(py_dict['CELL_PARAMETERS']['rows']) > 0:
+        lines.append(f'CELL_PARAMETERS {py_dict["CELL_PARAMETERS"]["type"]}\n')
+        for row in py_dict['CELL_PARAMETERS']['rows']:
+            lines.append(' '.join(map(str, row)) + '\n')
+        lines.append('\n')
+        
     lines.append(f'K_POINTS {py_dict["K_POINTS"]["type"]}\n')
     for kline in py_dict['K_POINTS']['rows']:
         lines.append(' '.join(map(str, kline))+'\n')
