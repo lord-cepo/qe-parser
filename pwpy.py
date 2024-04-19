@@ -62,7 +62,7 @@ def py2pw(py_dict, outfile='py.pw.in'):
         if key not in last_tags:
             var = t.search_by_name(key)
             if not isinstance(value, XmlQe.conversions[var.get('type')]):
-                raise ValueError(f'Variable {key} should be of type {var.get("type")}')
+                raise ValueError(f"Variable {key} = {value} should be of type {XmlQe.conversions[var.get('type')]}, instead it's of type {type(value)}")
             options = [v2.strip().replace("'", '') for v in var.findall('.//opt') for v2 in v.get('val').split(',')]
             if len(options) > 0 and value not in options:
                 raise ValueError(f'Variable {value} should be one of {options}')
