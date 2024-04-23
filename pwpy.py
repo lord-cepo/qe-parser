@@ -56,29 +56,30 @@ def pw2py(filename):
     return input_pw
 
 
-def py2pw(py_dict, outfile='py.pw.in'):
+def py2pw(py_dict, outfile='py.pw.in', ignore_tags=[]):
     t = XmlQe('PW')
     for key, value in py_dict.items():
         if key not in last_tags:
             var = t.search_by_name(key)
-            if not isinstance(value, XmlQe.conversions[var.get('type')]):
-                raise ValueError(f"Variable {key} = {value} should be of type {XmlQe.conversions[var.get('type')]}, instead it's of type {type(value)}")
-            options = [v2.strip().replace("'", '') for v in var.findall('.//opt') for v2 in v.get('val').split(',')]
-            if len(options) > 0 and value not in options:
-                raise ValueError(f'Variable {value} should be one of {options}')
+            if key not in ignore_tags:
+                if not isinstance(value, XmlQe.conversions[var.get('type')]):
+                    raise ValueError(f"Variable {key} = {value} should be of type {XmlQe.conversions[var.get('type')]}, instead it's of type {type(value)}")
+                options = [v2.strip().replace("'", '') for v in var.findall('.//opt') for v2 in v.get('val').split(',')]
+                if len(options) > 0 and value not in options:
+                    raise ValueError(f'Variable {value} should be one of {options}')
             
             namelist_node = var
             while namelist_node.tag != 'namelist':
                 namelist_node = t.parent_map[namelist_node]
             t.namelists[namelist_node.get('name')].append((key, value))
-
+                
     lines = []
     for namelist, variables in t.namelists.items():
         if len(variables) == 0:
             continue
         lines.append(f'&{namelist}\n')
         for key, value in variables:
-            lines.append(f'  {key} = {py2fort(value)}\n')
+            lines.append(f'  {key} = {py2fort(value) if key not in ignore_tags else value}\n')
         lines.append('/\n\n')
 
     lines.append('ATOMIC_SPECIES\n')
