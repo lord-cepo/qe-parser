@@ -1,6 +1,7 @@
 import os
 from utils.pwpy_utils import XmlQe, fort2py, py2fort
 import xml.etree.ElementTree as ET
+from warnings import warn
 from re import sub
 last_tags = ['ATOMIC_SPECIES', 'ATOMIC_POSITIONS', 'K_POINTS', 'CELL_PARAMETERS']
 
@@ -82,32 +83,23 @@ def py2pw(py_dict, outfile='py.pw.in', ignore_tags=[]):
             lines.append(f'  {key} = {py2fort(value) if key not in ignore_tags else value}\n')
         lines.append('/\n\n')
 
-    lines.append('ATOMIC_SPECIES\n')
-    if 'ATOMIC_SPECIES' in py_dict:
-        for row in py_dict['ATOMIC_SPECIES']['rows']:
-            lines.append(' '.join(map(str, row)) + '\n')
-    else:
+    if 'ATOMIC_SPECIES' not in py_dict:
         atomic_species = list(set(atomic_species))
         atomic_species = [row[0] for row in py_dict['ATOMIC_POSITIONS']['rows']]
-        for species in atomic_species:
-            lines.append(f'{species} {XmlQe.mass[species]} {species}.upf\n')
-    lines.append('\n')
-
-    lines.append(f'ATOMIC_POSITIONS {py_dict["ATOMIC_POSITIONS"]["type"]}\n')
-    for row in py_dict['ATOMIC_POSITIONS']['rows']:
-        lines.append(' '.join(map(str, row)) + '\n')
-    lines.append('\n')
-
-    if len(py_dict['CELL_PARAMETERS']['rows']) > 0:
-        lines.append(f'CELL_PARAMETERS {py_dict["CELL_PARAMETERS"]["type"]}\n')
-        for row in py_dict['CELL_PARAMETERS']['rows']:
-            lines.append(' '.join(map(str, row)) + '\n')
-        lines.append('\n')
-        
-    lines.append(f'K_POINTS {py_dict["K_POINTS"]["type"]}\n')
-    for kline in py_dict['K_POINTS']['rows']:
-        lines.append(' '.join(map(str, kline))+'\n')
-    lines.append('\n')
+        try:
+            py_dict['ATOMIC_SPECIES']['rows'] = [[species, XmlQe.mass[species], species+".upf"] for species in atomic_species]
+        except IndexError:
+            raise NotImplementedError("Mass of species is not in XmlQe.mass")
+    for tag in last_tags:
+        if tag in py_dict:
+            lines.append(f"{tag} {py_dict[tag]['type'] if 'type' in py_dict[tag] else ''}\n")
+            for row in py_dict[tag]['rows']:
+                lines.append(' '.join(map(str, row)) + '\n')
+            lines.append('\n')
+        elif tag == 'CELL_PARAMETERS' and py_dict['ibrav'] != 0:
+            continue
+        else:
+            warn(f"The tag {tag} should be present for a functional calculation")
 
     with open(outfile, 'w', encoding='utf-8') as f:
         f.writelines(lines)
