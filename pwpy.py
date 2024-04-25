@@ -3,13 +3,12 @@ from utils.pwpy_utils import XmlQe, fort2py, py2fort
 import xml.etree.ElementTree as ET
 from warnings import warn
 from re import sub
+import bash
 last_tags = ['ATOMIC_SPECIES', 'ATOMIC_POSITIONS', 'K_POINTS', 'CELL_PARAMETERS']
 
 def pw2py(filename):
     t = XmlQe('PW')
     input_pw = {}
-    for tag in last_tags:
-        input_pw[tag] = {'rows': []}
 
     with open(filename, 'r', encoding='utf-8') as f:
         lines = f.readlines()
@@ -29,6 +28,7 @@ def pw2py(filename):
         sp = sp.split()
         if any(line.startswith(tag) for tag in last_tags):
             read = sp[0]
+            input_pw[read] = {'rows': []}
             if len(sp) == 2:
                 input_pw[read]['type'] = sp[1]
             continue
@@ -92,14 +92,15 @@ def py2pw(py_dict, outfile='py.pw.in', ignore_tags=[]):
             raise NotImplementedError("Mass of species is not in XmlQe.mass")
     for tag in last_tags:
         if tag in py_dict:
+            if tag == 'CELL_PARAMETERS' and py_dict['ibrav'] != 0:
+                warn("You defined both CELL_PARAMETERS and ibrav. Ignoring CELL_PARAMETERS")
+                continue
             lines.append(f"{tag} {py_dict[tag]['type'] if 'type' in py_dict[tag] else ''}\n")
             for row in py_dict[tag]['rows']:
                 lines.append(' '.join(map(str, row)) + '\n')
             lines.append('\n')
-        elif tag == 'CELL_PARAMETERS' and py_dict['ibrav'] != 0:
-            continue
-        else:
-            warn(f"The tag {tag} should be present for a functional calculation")
+        elif tag != 'CELL_PARAMETERS' or py_dict['ibrav'] == 0:
+                warn(f"The tag {tag} should be present for a functional calculation")
 
     with open(outfile, 'w', encoding='utf-8') as f:
         f.writelines(lines)
